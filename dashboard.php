@@ -2,10 +2,13 @@
 session_start();
 
 // Cek apakah user sudah login
-
+if (!isset($_SESSION['logged_in'])) {
+    header("Location: login.php");
+    exit;
+}
 
 // Cek role user
-
+$isAdmin = ($_SESSION['role'] === 'admin');
 ?>
 
 <!DOCTYPE html>
@@ -14,58 +17,17 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        .dashboard-container {
-            text-align: center;
-            padding: 20px;
-        }
-        .welcome-message {
-            margin-bottom: 20px;
-        }
-        .logout-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #f44336;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin-top: 10px;
-        }
-        .logout-btn:hover {
-            background-color: #d32f2f;
-        }
-        .admin-panel {
-            background-color: #e3f2fd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .admin-panel h3 {
-            color: #1976d2;
-            margin-bottom: 15px;
-        }
-        .admin-btn {
-            display: inline-block;
-            padding: 8px 16px;
-            background-color: #2196f3;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            margin: 5px;
-        }
-        .admin-btn:hover {
-            background-color: #1976d2;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
-        <div class="form-container dashboard-container">
-            <h2>Selamat Datang</h2>
+        <div class="form_area dashboard-container">
+            <h2 class="title">Selamat Datang</h2>
             <div class="welcome-message">
-                <p>Halo, ?????</p>
-                <p>Role: ?????</p>
+                <p>Halo, <?php echo htmlspecialchars($_SESSION['username']); ?></p>
+                <p>Role: <?php echo htmlspecialchars($_SESSION['role']); ?></p>
                 <p>Anda telah berhasil login ke sistem.</p>
             </div>
 
@@ -88,4 +50,4 @@ session_start();
         </div>
     </div>
 </body>
-</html> 
+</html>

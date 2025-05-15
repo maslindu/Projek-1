@@ -3,11 +3,34 @@ session_start();
 require_once 'config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // buat perilaku ketika salah username atau password
-    // buat perilaku ketika username tidak ditemukan
-    // buat perilaku ketika password salah
-    // buat perilaku ketika login berhasil
-    // buat perilaku ketika login gagal
-    // buat perilaku ketika login berhasil  
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // Hash password input dengan MD5
+    $hashed_password = md5($password);
+
+    // Cari pengguna berdasarkan username dan password yang sudah dihash
+    $stmt = $conn->prepare("SELECT id, username, role FROM users WHERE username = ? AND password = ?");
+    $stmt->bind_param("ss", $username, $hashed_password);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) {
+        // Username atau password salah
+        header("Location: ../login.php?error=Username atau password salah");
+        exit;
+    }
+
+    $user = $result->fetch_assoc();
+
+    // Login berhasil, set session
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['role'] = $user['role'];
+    $_SESSION['logged_in'] = true;
+
+    // Redirect ke dashboard
+    header("Location: ../dashboard.php");
+    exit;
 }
-?> 
+?>
