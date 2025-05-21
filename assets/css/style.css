@@ -153,12 +153,12 @@ input:focus {
     border-radius: 8px;
     margin-top: 20px;
     border: 2px solid #264143;
-    box-shadow: 3px 4px 0px 1px #E99F4C;
 }
 
 .admin-panel h3 {
     color: #264143;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
+    margin-top: 0px;
 }
 
 .user-panel {
@@ -187,4 +187,99 @@ input:focus {
 
 .admin-btn:hover {
     background-color: #1a2f2f;
+}
+
+/* Profile Page Styles */
+.profile-container {
+    text-align: center;
+    padding: 30px;
+}
+
+.profile-picture {
+    margin: 20px 0;
+}
+
+.profile-img {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid #DE5499;
+}
+
+.profile-info {
+    text-align: left;
+    width: 100%;
+    max-width: 400px;
+    margin: 15px;
+    background-color: #f0e6e4;
+    border-radius: 8px;
+    border: 2px solid #264143;
+}
+
+.info-item {
+    margin: 15px 15px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #264143;
+    display: inline-block;
+    width: 150px;
+}
+
+.info-value {
+    color: #264143;
+}
+
+.profile-actions {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.edit-btn {
+    background-color: #264143 !important;
+    width: auto;
+    padding: 10px 20px;
+}
+
+.edit-btn:hover {
+    background-color: #1a2f2f !important;
+}
+
+.back-btn {
+    background-color: #f44336 !important;
+    width: auto;
+    padding: 10px 20px;
+}
+
+.back-btn:hover {
+    background-color: #d32f2f !important;
+}
+
+/* Edit Profile Styles */
+.edit-profile-form {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.edit-profile-form .form_group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+.edit-profile-form input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.edit-profile-form .profile-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
 }
