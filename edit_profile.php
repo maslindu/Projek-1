@@ -2,10 +2,16 @@
 session_start();
 
 // Cek apakah user sudah login
-if (!isset($_SESSION['logged_in'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['logged_in']) || !isset($_SESSION['timeout']) || $_SESSION['timeout'] < time()) {
+    // Hapus session jika timeout
+    session_unset();
+    session_destroy();
+    header("Location: login.php?error=Sesi telah berakhir, silakan login kembali");
     exit;
 }
+
+// Perbarui timeout sesi
+$_SESSION['timeout'] = time() + ($_SESSION['timeout'] - time());
 
 require_once 'includes/config.php';
 

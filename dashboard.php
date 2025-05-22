@@ -7,9 +7,32 @@ if (!isset($_SESSION['logged_in'])) {
     exit;
 }
 
+// Jika bukan admin, cek session timeout
+if ($_SESSION['role'] !== 'admin' && (!isset($_SESSION['timeout']) || $_SESSION['timeout'] < time())) {
+    // Hapus session jika timeout
+    session_unset();
+    session_destroy();
+    header("Location: login.php?error=Sesi telah berakhir, silakan login kembali");
+    exit;
+}
+
+// Jika bukan admin, perbarui timeout sesi
+if ($_SESSION['role'] !== 'admin') {
+    // Ambil pengaturan timeout sesi dari database
+    require_once 'includes/config.php';
+    $stmt = $conn->prepare("SELECT setting_value FROM system_settings WHERE setting_name = 'session_timeout'");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $timeout = intval($result->fetch_assoc()['setting_value'] ?? 1800);
+    $stmt->close();
+    
+    $_SESSION['timeout'] = time() + $timeout;
+}
+
 // Cek role user
-$isAdmin = ($_SESSION['role'] === 'admin');
+$isAdmin = ($_SESSION['role'] == 'admin');
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -34,9 +57,17 @@ $isAdmin = ($_SESSION['role'] === 'admin');
             <?php if ($isAdmin): ?>
             <div class="admin-panel">
                 <h3>Admin Panel</h3>
-                <a href="#" class="admin-btn">Kelola User</a>
-                <a href="#" class="admin-btn">Lihat Log</a>
-                <a href="#" class="admin-btn">Pengaturan</a>
+                <div class="admin-buttons">
+                    <a href="manage_users.php" class="admin-btn">
+                        <i class="fas fa-users"></i> Kelola User
+                    </a>
+                    <a href="#" class="admin-btn">
+                        Lihat Log
+                    </a>
+                    <a href="settings.php" class="admin-btn">
+                        <i class="fas fa-cog"></i> Pengaturan
+                    </a>
+                </div>
             </div>
             <?php else: ?>
             <div class="user-panel">

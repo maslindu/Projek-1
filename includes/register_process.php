@@ -6,12 +6,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = $_POST['email'];
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
-
+    
     // Validasi password
     if ($password != $confirm_password) {
         header("Location: ../register.php?error=Password tidak sama");
         exit;
     }
+
+    // Ambil pengaturan kekuatan password
+    $stmt = $conn->prepare("SELECT setting_value FROM system_settings WHERE setting_name = 'password_strength'");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $strength_setting = $result->fetch_assoc()['setting_value'] ?? 'medium';
+    $stmt->close();
+
+    // Validasi kekuatan password
+    $error = validate_password($password, $strength_setting);
+    if ($error) {
+        header("Location: ../register.php?error=" . urlencode($error));
+        exit;
+    }
+
 
     // Cek apakah username sudah ada
     $check_username = $conn->prepare("SELECT username FROM users WHERE username = ?");
@@ -50,5 +65,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     $stmt->close();
     $conn->close();
+}
+
+function validate_password($password, $strength) {
+    switch ($strength) {
+        case 'high':
+            if (strlen($password) < 8) {
+                return "Password minimal 8 karakter";
+            }
+            if (!preg_match('/[A-Z]/', $password)) {
+                return "Password harus mengandung huruf besar";
+            }
+            if (!preg_match('/[a-z]/', $password)) {
+                return "Password harus mengandung huruf kecil";
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                return "Password harus mengandung angka";
+            }
+            if (!preg_match('/[\W]/', $password)) {
+                return "Password harus mengandung simbol";
+            }
+            break;
+        case 'medium':
+            if (strlen($password) < 6) {
+                return "Password minimal 6 karakter";
+            }
+            if (!preg_match('/[A-Za-z]/', $password)) {
+                return "Password harus mengandung huruf";
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                return "Password harus mengandung angka";
+            }
+            break;
+        case 'low':
+            if (strlen($password) < 4) {
+                return "Password minimal 4 karakter";
+            }
+            break;
+    }
+    return false;
 }
 ?>
