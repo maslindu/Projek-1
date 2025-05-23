@@ -58,6 +58,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     // Update session
                     $_SESSION['username'] = $new_username;
                     
+                    // Catat aktivitas edit profil
+                    require_once 'includes/log_activity.php';
+                    log_activity($_SESSION['user_id'], $new_username, 'profile_update', 'User updated profile (Email: ' . $new_email . ')');
+                    
                     // Redirect ke info profile dengan pesan sukses
                     header("Location: info_profile.php?success=Profil berhasil diperbarui");
                     exit;

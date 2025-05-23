@@ -1,6 +1,12 @@
 <?php
 session_start();
 
+// Catat aktivitas logout jika user sudah login
+if (isset($_SESSION['user_id'])) {
+    require_once 'includes/log_activity.php';
+    log_activity($_SESSION['user_id'], $_SESSION['username'], 'logout', 'User logged out');
+}
+
 // Hapus semua data session
 $_SESSION = array();
 
@@ -12,6 +18,7 @@ if (ini_get("session.use_cookies")) {
         $params["secure"], $params["httponly"]
     );
 }
+
 
 // Hancurkan session
 session_destroy();

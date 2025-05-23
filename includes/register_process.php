@@ -1,5 +1,6 @@
 <?php
 require_once 'config.php';
+require_once 'log_activity.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
@@ -58,7 +59,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("sss", $username, $email, $hashed_password);
     
     if ($stmt->execute()) {
-        header("Location: ../login.php?success=Registrasi berhasil! Silakan login.");
+    // Dapatkan ID user yang baru dibuat
+    $user_id = $stmt->insert_id;
+    
+    // Catat aktivitas registrasi
+    require_once 'log_activity.php';
+    log_activity($user_id, $username, 'registration', 'New user registered');
+    
+    header("Location: ../login.php?success=Registrasi berhasil! Silakan login.");
     } else {
         header("Location: ../register.php?error=Registrasi gagal. Silakan coba lagi.");
     }

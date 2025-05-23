@@ -21,25 +21,55 @@ $stmt->close();
 
 // Proses form jika ada submit
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $changes = []; // Untuk mencatat perubahan
+    
     // Validasi dan update session timeout
     if (isset($_POST['session_timeout']) && is_numeric($_POST['session_timeout'])) {
         $timeout = intval($_POST['session_timeout']);
-        $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ? WHERE setting_name = 'session_timeout'");
-        $stmt->bind_param("i", $timeout);
-        $stmt->execute();
-        $stmt->close();
         
-        // Update session timeout langsung
-        $_SESSION['timeout'] = $timeout;
+        // Dapatkan nilai lama untuk log
+        $old_timeout = $settings['session_timeout'] ?? '1800';
+        
+        if ($old_timeout != $timeout) {
+            $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ? WHERE setting_name = 'session_timeout'");
+            $stmt->bind_param("i", $timeout);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Update session timeout langsung
+            $_SESSION['timeout'] = $timeout;
+            
+            // Catat perubahan
+            $changes[] = "Session timeout dari {$old_timeout} ke {$timeout} detik";
+        }
     }
 
     // Validasi dan update password strength
     if (isset($_POST['password_strength']) && in_array($_POST['password_strength'], ['low', 'medium', 'high'])) {
         $strength = $_POST['password_strength'];
-        $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ? WHERE setting_name = 'password_strength'");
-        $stmt->bind_param("s", $strength);
-        $stmt->execute();
-        $stmt->close();
+        $old_strength = $settings['password_strength'] ?? 'medium';
+        
+        if ($old_strength != $strength) {
+            $stmt = $conn->prepare("UPDATE system_settings SET setting_value = ? WHERE setting_name = 'password_strength'");
+            $stmt->bind_param("s", $strength);
+            $stmt->execute();
+            $stmt->close();
+            
+            // Catat perubahan
+            $changes[] = "Password strength dari {$old_strength} ke {$strength}";
+        }
+    }
+
+    // Jika ada perubahan, catat ke log
+    if (!empty($changes)) {
+        require_once 'includes/log_activity.php';
+        $change_description = "Admin mengubah pengaturan: " . implode(", ", $changes);
+        log_activity(
+            $_SESSION['user_id'],
+            $_SESSION['username'],
+            'system_settings_update',
+            $change_description
+        );
     }
 
     // Redirect dengan pesan sukses

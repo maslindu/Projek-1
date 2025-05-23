@@ -61,8 +61,8 @@ $isAdmin = ($_SESSION['role'] == 'admin');
                     <a href="manage_users.php" class="admin-btn">
                         <i class="fas fa-users"></i> Kelola User
                     </a>
-                    <a href="#" class="admin-btn">
-                        Lihat Log
+                    <a href="view_logs.php" class="admin-btn">
+                        <i class="fas fa-history"></i> Lihat Log
                     </a>
                     <a href="settings.php" class="admin-btn">
                         <i class="fas fa-cog"></i> Pengaturan

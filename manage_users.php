@@ -28,10 +28,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && isset($_P
     if ($action === 'delete') {
         // Jangan izinkan menghapus diri sendiri
         if ($user_id != $_SESSION['user_id']) {
+            // Dapatkan info user yang akan dihapus untuk log
+            $stmt_get_user = $conn->prepare("SELECT username FROM users WHERE id = ?");
+            $stmt_get_user->bind_param("i", $user_id);
+            $stmt_get_user->execute();
+            $user_to_delete = $stmt_get_user->get_result()->fetch_assoc();
+            $stmt_get_user->close();
+            
             $stmt = $conn->prepare("DELETE FROM users WHERE id = ?");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
             $stmt->close();
+            
+            // Catat aktivitas penghapusan
+            require_once 'includes/log_activity.php';
+            log_activity(
+                $_SESSION['user_id'], 
+                $_SESSION['username'], 
+                'delete_user', 
+                'Admin menghapus user: ' . $user_to_delete['username'] . ' (ID: ' . $user_id . ')'
+            );
             
             // Refresh halaman
             header("Location: manage_users.php?success=User berhasil dihapus");
@@ -42,10 +58,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && isset($_P
         
         // Jangan izinkan mengubah role diri sendiri
         if ($user_id != $_SESSION['user_id']) {
+            // Dapatkan info user yang akan diubah
+            $stmt_get_user = $conn->prepare("SELECT username, role FROM users WHERE id = ?");
+            $stmt_get_user->bind_param("i", $user_id);
+            $stmt_get_user->execute();
+            $user_to_update = $stmt_get_user->get_result()->fetch_assoc();
+            $stmt_get_user->close();
+            
             $stmt = $conn->prepare("UPDATE users SET role = ? WHERE id = ?");
             $stmt->bind_param("si", $new_role, $user_id);
             $stmt->execute();
             $stmt->close();
+            
+            // Catat aktivitas perubahan role
+            require_once 'includes/log_activity.php';
+            $action_type = ($action === 'promote') ? 'promote_user' : 'demote_user';
+            $action_desc = ($action === 'promote') ? 'menaikkan' : 'menurunkan';
+            log_activity(
+                $_SESSION['user_id'], 
+                $_SESSION['username'], 
+                $action_type, 
+                'Admin ' . $action_desc . ' role user ' . $user_to_update['username'] . 
+                ' (ID: ' . $user_id . ') dari ' . $user_to_update['role'] . ' ke ' . $new_role
+            );
             
             // Refresh halaman
             header("Location: manage_users.php?success=Role user berhasil diubah");

@@ -39,6 +39,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $update_stmt->bind_param("si", $hashed_password, $_SESSION['user_id']);
             
             if ($update_stmt->execute()) {
+                // Catat aktivitas perubahan password
+                require_once 'includes/log_activity.php';
+                log_activity($_SESSION['user_id'], $_SESSION['username'], 'password_change', 'User changed password');
+                
                 // Hapus semua data session
                 $_SESSION = array();
                 

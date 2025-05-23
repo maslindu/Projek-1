@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
+require_once 'log_activity.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
@@ -41,6 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->close();
         $_SESSION['timeout'] = time() + $timeout;
     }
+
+    // Catat aktivitas login
+    log_activity($user['id'], $user['username'], 'login', 'User logged in');
 
     // Redirect ke dashboard
     header("Location: ../dashboard.php");
