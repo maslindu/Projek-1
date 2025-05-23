@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
     
-    // Validasi
+    // Validasi dasar
     if (empty($current_password) || empty($new_password) || empty($confirm_password)) {
         $error = "Semua field harus diisi";
     } elseif ($new_password != $confirm_password) {
@@ -33,41 +33,96 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (md5($current_password) != $user['password']) {
             $error = "Password saat ini salah";
         } else {
-            // Update password
-            $hashed_password = md5($new_password);
-            $update_stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-            $update_stmt->bind_param("si", $hashed_password, $_SESSION['user_id']);
+            // Ambil pengaturan kekuatan password dari database
+            $stmt = $conn->prepare("SELECT setting_value FROM system_settings WHERE setting_name = 'password_strength'");
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $strength_setting = $result->fetch_assoc()['setting_value'] ?? 'medium';
+            $stmt->close();
             
-            if ($update_stmt->execute()) {
-                // Catat aktivitas perubahan password
-                require_once 'includes/log_activity.php';
-                log_activity($_SESSION['user_id'], $_SESSION['username'], 'password_change', 'User changed password');
+            // Validasi kekuatan password baru
+            $validation_error = validate_password($new_password, $strength_setting);
+            if ($validation_error) {
+                $error = $validation_error;
+            } else {
+                // Update password
+                $hashed_password = md5($new_password);
+                $update_stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $update_stmt->bind_param("si", $hashed_password, $_SESSION['user_id']);
                 
-                // Hapus semua data session
-                $_SESSION = array();
-                
-                // Hapus session cookie
-                if (ini_get("session.use_cookies")) {
-                    $params = session_get_cookie_params();
-                    setcookie(session_name(), '', time() - 42000,
-                        $params["path"], $params["domain"],
-                        $params["secure"], $params["httponly"]
-                    );
+                if ($update_stmt->execute()) {
+                    // Catat aktivitas perubahan password
+                    require_once 'includes/log_activity.php';
+                    log_activity($_SESSION['user_id'], $_SESSION['username'], 'password_change', 'User changed password');
+                    
+                    // Hapus semua data session
+                    $_SESSION = array();
+                    
+                    // Hapus session cookie
+                    if (ini_get("session.use_cookies")) {
+                        $params = session_get_cookie_params();
+                        setcookie(session_name(), '', time() - 42000,
+                            $params["path"], $params["domain"],
+                            $params["secure"], $params["httponly"]
+                        );
+                    }
+                    
+                    // Hancurkan session
+                    session_destroy();
+                    
+                    // Redirect ke halaman login dengan pesan sukses
+                    header("Location: login.php?success=Password berhasil diubah. Silakan login kembali.");
+                    exit;
+                } else {
+                    $error = "Gagal mengubah password";
                 }
                 
-                // Hancurkan session
-                session_destroy();
-                
-                // Redirect ke halaman login dengan pesan sukses
-                header("Location: login.php?success=Password berhasil diubah. Silakan login kembali.");
-                exit;
-            } else {
-                $error = "Gagal mengubah password";
+                $update_stmt->close();
             }
-            
-            $update_stmt->close();
         }
     }
+}
+
+/**
+ * Fungsi untuk validasi kekuatan password
+ */
+function validate_password($password, $strength) {
+    switch ($strength) {
+        case 'high':
+            if (strlen($password) < 8) {
+                return "Password minimal 8 karakter";
+            }
+            if (!preg_match('/[A-Z]/', $password)) {
+                return "Password harus mengandung minimal 1 huruf besar";
+            }
+            if (!preg_match('/[a-z]/', $password)) {
+                return "Password harus mengandung minimal 1 huruf kecil";
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                return "Password harus mengandung minimal 1 angka";
+            }
+            if (!preg_match('/[\W]/', $password)) {
+                return "Password harus mengandung minimal 1 simbol";
+            }
+            break;
+        case 'medium':
+            if (strlen($password) < 6) {
+                return "Password minimal 6 karakter";
+            }
+            if (!preg_match('/[A-Za-z]/', $password)) {
+                return "Password harus mengandung huruf";
+            }
+            if (!preg_match('/[0-9]/', $password)) {
+                return "Password harus mengandung angka";
+            }
+            break;
+        case 'low':
+            if (strlen($password) < 4) {
+                return "Password minimal 4 karakter";
+            }
+            break;
+    }
+    return false;
 }
 ?>
 
